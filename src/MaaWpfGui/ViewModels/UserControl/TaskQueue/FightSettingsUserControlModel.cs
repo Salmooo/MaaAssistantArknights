@@ -1348,9 +1348,6 @@ public partial class FightSettingsUserControlModel : TaskSettingsViewModel, Figh
         var daysUntilEndOfWeek = ((7 - (int)yjTime.DayOfWeek + 7) % 7) + 1; // 距离本周结束的天数, 用鹰历计算
         var activityExpireDays = activityExpireIn2Days && fight.UseExpireMedicineForActivity ? daysUntilEndOfWeek : 0;
 
-        var battleAssist = ConfigFactory.CurrentConfig.TaskQueue
-            .OfType<BattleAssistTask>()
-            .FirstOrDefault(task => task.IsEnable != false);
         var task = new AsstFightTask() {
             Stage = stage,
             Medicine = fight.UseMedicine != false ? fight.MedicineCount : 0,
@@ -1359,8 +1356,6 @@ public partial class FightSettingsUserControlModel : TaskSettingsViewModel, Figh
             MaxTimes = maxTimes,
             MedicineExpireDays = Math.Max(expireDays, activityExpireDays),
             IsDrGrandet = fight.IsDrGrandet,
-            AutoUseSkills = battleAssist?.AutoUseSkills == true,
-            AutoSpeedUp = battleAssist?.AutoSpeedUp == true,
             ReportToPenguin = SettingsViewModel.ThirdPartyServiceSettings.EnablePenguin,
             ReportToYituliu = SettingsViewModel.ThirdPartyServiceSettings.EnableYituliu,
             PenguinId = SettingsViewModel.ThirdPartyServiceSettings.PenguinId,

@@ -22,12 +22,23 @@ bool asst::BattleAssistTask::run()
     if (!m_enable) {
         return true;
     }
+    if (!m_auto_use_skills && !m_auto_speed_up) {
+        return true;
+    }
 
     BattleHelper::clear();
     m_in_speedup = false;
-    if (!check_in_battle(cv::Mat(), false)) {
-        LogInfo << __FUNCTION__ << "no active battle, battle assist passed";
-        return true;
+    LogInfo << __FUNCTION__ << "waiting for personal battle";
+    while (!need_exit()) {
+        if (check_in_battle(cv::Mat(), false)) {
+            run_battle_assist(m_auto_use_skills, m_auto_speed_up);
+            BattleHelper::clear();
+            m_in_speedup = false;
+            LogInfo << __FUNCTION__ << "battle finished, waiting for next battle";
+        }
+        else {
+            sleep(500);
+        }
     }
-    return run_battle_assist(m_auto_use_skills, m_auto_speed_up);
+    return true;
 }

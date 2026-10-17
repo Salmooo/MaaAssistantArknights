@@ -3,7 +3,6 @@
 #include <utility>
 
 #include "Config/TaskData.h"
-#include "Task/Fight/BattleAssistTaskPlugin.h"
 #include "Task/Fight/DrGrandetTaskPlugin.h"
 #include "Task/Fight/FightTimesTaskPlugin.h"
 #include "Task/Fight/MedicineCounterTaskPlugin.h"
@@ -56,7 +55,6 @@ asst::FightTask::FightTask(const AsstCallback& callback, Assistant* inst) :
     m_fight_times_prt = m_fight_task_ptr->register_plugin<FightTimesTaskPlugin>();
     m_fight_times_prt->set_retry_times(3);
     m_medicine_plugin = m_fight_task_ptr->register_plugin<MedicineCounterTaskPlugin>();
-    m_battle_assist_plugin_ptr = m_fight_task_ptr->register_plugin<BattleAssistTaskPlugin>();
 
     m_subtasks.emplace_back(m_start_up_task_ptr);
     m_subtasks.emplace_back(m_stage_navigation_task_ptr);
@@ -111,9 +109,6 @@ bool asst::FightTask::set_params(const json::value& params)
     std::string server = params.get("server", "CN");
     std::string client_type = params.get("client_type", std::string());
     bool is_dr_grandet = params.get("DrGrandet", false);
-    const bool auto_use_skills = params.get("auto_use_skills", false);
-    const bool auto_speed_up = params.get("auto_speed_up", false);
-    m_battle_assist_plugin_ptr->set_options(auto_use_skills, auto_speed_up);
 
     if (auto opt = params.find<json::object>("drops")) {
         std::unordered_map<std::string, int> drops;

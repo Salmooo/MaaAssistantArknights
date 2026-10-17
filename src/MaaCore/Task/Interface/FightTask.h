@@ -5,7 +5,6 @@
 
 namespace asst
 {
-class BattleAssistTaskPlugin;
 class FightTimesTaskPlugin;
 class ProcessTask;
 class StageDropsTaskPlugin;
@@ -32,7 +31,6 @@ protected:
     std::shared_ptr<MedicineCounterTaskPlugin> m_medicine_plugin = nullptr;
     std::shared_ptr<StageDropsTaskPlugin> m_stage_drops_plugin_ptr = nullptr;
     std::shared_ptr<DrGrandetTaskPlugin> m_dr_grandet_task_plugin_ptr = nullptr;
-    std::shared_ptr<BattleAssistTaskPlugin> m_battle_assist_plugin_ptr = nullptr;
     std::shared_ptr<SideStoryReopenTask> m_sidestory_reopen_task_ptr = nullptr;
 };
 }

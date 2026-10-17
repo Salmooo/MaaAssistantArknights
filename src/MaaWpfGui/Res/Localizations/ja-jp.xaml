@@ -956,7 +956,7 @@ C:\leidian\LDPlayer9
     <system:String x:Key="Combat">作戦</system:String>
     <system:String x:Key="Fight">{key=Combat}</system:String>
     <system:String x:Key="BattleAssist">戦闘補助</system:String>
-    <system:String x:Key="BattleAssistTip">現在手動で進行中の戦闘を引き継ぐことができ、同じ設定内のすべての理性作戦にも自動適用されます。ステージ指定は不要です。</system:String>
+    <system:String x:Key="BattleAssistTip">有効にして開始すると、任意ステージの個人戦闘を待機し、2 倍速とスキル自動発動を行います。戦闘後も停止するまで次の戦闘を待機します。理性作戦の周回には影響しません。</system:String>
     <system:String x:Key="AutoUseSkills">スキルを自動発動</system:String>
     <system:String x:Key="AutoUseSkillsTip">約 1.5 秒ごとに戦場の配置済みオペレーターを走査し、スキルの準備ができるとすぐに発動します。スキル種別は区別しないため、手動でタイミングを合わせるステージには向かない場合があります。</system:String>
     <system:String x:Key="AutoSpeedUp">戦闘開始時に 2 倍速</system:String>

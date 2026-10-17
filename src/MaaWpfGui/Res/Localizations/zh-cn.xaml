@@ -1002,7 +1002,7 @@ C:\leidian\LDPlayer9
     <system:String x:Key="Combat">理智作战</system:String>
     <system:String x:Key="Fight">{key=Combat}</system:String>
     <system:String x:Key="BattleAssist">战斗辅助</system:String>
-    <system:String x:Key="BattleAssistTip">可直接接管当前手动进行中的战斗，也会自动应用到同一档案内的所有理智作战，无需指定关卡。</system:String>
+    <system:String x:Key="BattleAssistTip">启用并启动后，会持续等待个人进行的任意战斗，自动切换二倍速并释放已就绪技能，战斗结束后继续等待下一场，直到手动停止。理智作战扫荡不受影响。</system:String>
     <system:String x:Key="AutoUseSkills">自动开技能</system:String>
     <system:String x:Key="AutoUseSkillsTip">每约 1.5 秒扫描一次场上所有已部署干员，技能就绪后立即点击。不会区分技能类型，可能不适合需要手动对轴的关卡。</system:String>
     <system:String x:Key="AutoSpeedUp">开局自动二倍速</system:String>
