@@ -953,6 +953,12 @@ If the game is launched in portrait mode and then switched to landscape, it may 
     <system:String x:Key="Infrast">{key=Base}</system:String>
     <system:String x:Key="Combat">Combat</system:String>
     <system:String x:Key="Fight">{key=Combat}</system:String>
+    <system:String x:Key="BattleAssist">Battle assistance</system:String>
+    <system:String x:Key="BattleAssistTip">Affects Fight tasks only. Auto skill activation continuously detects ready skill indicators, while auto speed checks and switches to 2× speed at the start of every battle.</system:String>
+    <system:String x:Key="AutoUseSkills">Auto-activate skills</system:String>
+    <system:String x:Key="AutoUseSkillsTip">Scans all deployed operators about every 1.5 seconds and activates ready skills immediately. Skill types are not distinguished, so stages that require manual skill timing may not work well.</system:String>
+    <system:String x:Key="AutoSpeedUp">Start battles at 2× speed</system:String>
+    <system:String x:Key="AutoSpeedUpTip">Checks the current battle speed after the battle starts and switches to 2× speed when necessary.</system:String>
     <system:String x:Key="OperProgress">Operator Progression</system:String>
     <system:String x:Key="OperProgress.SkillLevelTarget">Skill level {0}</system:String>
     <system:String x:Key="OperProgress.MasteryTarget">Skill {0}, mastery {1}</system:String>
@@ -2839,6 +2845,7 @@ Sanity stage: {2}</system:String>
     <system:String x:Key="WeComBotScheduleAdd">Add time</system:String>
     <system:String x:Key="WeComBotScheduleRemove">Remove this time</system:String>
     <system:String x:Key="WeComBotEditAccount">Edit daily clear</system:String>
+    <system:String x:Key="WeComBotDailyConfig">Daily clear</system:String>
     <system:String x:Key="WeComBotAccountEditorTip">These options are saved in the profile linked to this account and take effect immediately. Other options are available in MAA's task settings or through chat.</system:String>
     <system:String x:Key="WeComBotUseMedicine">Use sanity potions</system:String>
     <system:String x:Key="WeComBotMedicineCount">Count</system:String>

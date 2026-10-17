@@ -68,6 +68,18 @@ public class AsstFightTask : AsstBaseTask
     public bool IsDrGrandet { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether 自动使用场上所有就绪技能
+    /// </summary>
+    [JsonProperty("auto_use_skills")]
+    public bool AutoUseSkills { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether 战斗开始后自动切换到二倍速
+    /// </summary>
+    [JsonProperty("auto_speed_up")]
+    public bool AutoSpeedUp { get; set; }
+
+    /// <summary>
     /// Gets or sets 掉落物品id, 数量
     /// </summary>
     public Dictionary<string, int> Drops { get; set; } = [];

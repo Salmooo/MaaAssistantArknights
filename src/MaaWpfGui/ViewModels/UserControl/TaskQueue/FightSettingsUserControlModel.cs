@@ -1044,6 +1044,30 @@ public partial class FightSettingsUserControlModel : TaskSettingsViewModel, Figh
     }
 
     /// <summary>
+    /// Gets or sets a value indicating whether 自动使用场上所有就绪技能。
+    /// </summary>
+    public bool AutoUseSkills
+    {
+        get => GetTaskConfig<FightTask>().AutoUseSkills;
+        set {
+            SetTaskConfig<FightTask>(t => t.AutoUseSkills == value, t => t.AutoUseSkills = value);
+            SetFightParams();
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether 战斗开始后自动切换到二倍速。
+    /// </summary>
+    public bool AutoSpeedUp
+    {
+        get => GetTaskConfig<FightTask>().AutoSpeedUp;
+        set {
+            SetTaskConfig<FightTask>(t => t.AutoSpeedUp == value, t => t.AutoSpeedUp = value);
+            SetFightParams();
+        }
+    }
+
+    /// <summary>
     /// Gets or sets a value indicating whether 使用备选关卡。
     /// </summary>
     public bool UseAlternateStage
@@ -1356,6 +1380,8 @@ public partial class FightSettingsUserControlModel : TaskSettingsViewModel, Figh
             MaxTimes = maxTimes,
             MedicineExpireDays = Math.Max(expireDays, activityExpireDays),
             IsDrGrandet = fight.IsDrGrandet,
+            AutoUseSkills = fight.AutoUseSkills,
+            AutoSpeedUp = fight.AutoSpeedUp,
             ReportToPenguin = SettingsViewModel.ThirdPartyServiceSettings.EnablePenguin,
             ReportToYituliu = SettingsViewModel.ThirdPartyServiceSettings.EnableYituliu,
             PenguinId = SettingsViewModel.ThirdPartyServiceSettings.PenguinId,

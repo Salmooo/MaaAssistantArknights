@@ -86,6 +86,8 @@ public class WeComBotAccountEditorViewModel : Screen
         Stage = string.IsNullOrWhiteSpace(account.Stage) ? fight?.StagePlan.FirstOrDefault() ?? string.Empty : account.Stage;
         UseMedicine = fight?.UseMedicine ?? false;
         MedicineCount = fight?.MedicineCount ?? 0;
+        AutoUseSkills = fight?.AutoUseSkills ?? false;
+        AutoSpeedUp = fight?.AutoSpeedUp ?? false;
         FightEnabled = IsEnabled<FightTask>();
         InfrastEnabled = IsEnabled<InfrastTask>();
         RecruitEnabled = IsEnabled<RecruitTask>();
@@ -105,6 +107,10 @@ public class WeComBotAccountEditorViewModel : Screen
     public bool UseMedicine { get; set; }
 
     public int MedicineCount { get; set; }
+
+    public bool AutoUseSkills { get; set; }
+
+    public bool AutoSpeedUp { get; set; }
 
     public bool FightEnabled { get; set; }
 
@@ -144,6 +150,8 @@ public class WeComBotAccountEditorViewModel : Screen
 
             fight.UseMedicine = UseMedicine;
             fight.MedicineCount = MedicineCount;
+            fight.AutoUseSkills = AutoUseSkills;
+            fight.AutoSpeedUp = AutoSpeedUp;
         }
 
         SetEnabled<FightTask>(FightEnabled);

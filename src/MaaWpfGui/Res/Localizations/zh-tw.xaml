@@ -953,6 +953,12 @@ C:\leidian\LDPlayer9
     <system:String x:Key="Infrast">{key=Base}</system:String>
     <system:String x:Key="Combat">刷理智</system:String>
     <system:String x:Key="Fight">{key=Combat}</system:String>
+    <system:String x:Key="BattleAssist">戰鬥輔助</system:String>
+    <system:String x:Key="BattleAssistTip">僅影響理智作戰。自動開技能會持續辨識場上技能就緒圖示，二倍速會在每場戰鬥開始時檢查並切換。</system:String>
+    <system:String x:Key="AutoUseSkills">自動開技能</system:String>
+    <system:String x:Key="AutoUseSkillsTip">每約 1.5 秒掃描一次場上所有已部署幹員，技能就緒後立即點擊。不會區分技能類型，可能不適合需要手動對軸的關卡。</system:String>
+    <system:String x:Key="AutoSpeedUp">開局自動二倍速</system:String>
+    <system:String x:Key="AutoSpeedUpTip">戰鬥開始後檢查目前倍速，不是二倍速時自動切換。</system:String>
     <system:String x:Key="OperProgress">幹員培養</system:String>
     <system:String x:Key="OperProgress.SkillLevelTarget">技能等級 {0}</system:String>
     <system:String x:Key="OperProgress.MasteryTarget">技能 {0} 專精 {1}</system:String>
@@ -2837,6 +2843,7 @@ DEBUG 目錄下儲存的圖片有數量限制，超出後會自動清理舊圖�
     <system:String x:Key="WeComBotScheduleAdd">新增時間</system:String>
     <system:String x:Key="WeComBotScheduleRemove">刪除該時間</system:String>
     <system:String x:Key="WeComBotEditAccount">編輯一鍵長草</system:String>
+    <system:String x:Key="WeComBotDailyConfig">一鍵長草</system:String>
     <system:String x:Key="WeComBotAccountEditorTip">這些選項保存在該帳號對應的設定檔裡，點儲存後立即生效；其餘細項可在 MAA 任務設定或透過聊天修改。</system:String>
     <system:String x:Key="WeComBotUseMedicine">使用理智藥</system:String>
     <system:String x:Key="WeComBotMedicineCount">數量</system:String>

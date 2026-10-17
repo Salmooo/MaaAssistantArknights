@@ -1001,6 +1001,12 @@ C:\leidian\LDPlayer9
     <system:String x:Key="Infrast">{key=Base}</system:String>
     <system:String x:Key="Combat">理智作战</system:String>
     <system:String x:Key="Fight">{key=Combat}</system:String>
+    <system:String x:Key="BattleAssist">战斗辅助</system:String>
+    <system:String x:Key="BattleAssistTip">仅影响理智作战。自动开技能会持续识别场上技能就绪图标，二倍速会在每场战斗开始时检查并切换。</system:String>
+    <system:String x:Key="AutoUseSkills">自动开技能</system:String>
+    <system:String x:Key="AutoUseSkillsTip">每约 1.5 秒扫描一次场上所有已部署干员，技能就绪后立即点击。不会区分技能类型，可能不适合需要手动对轴的关卡。</system:String>
+    <system:String x:Key="AutoSpeedUp">开局自动二倍速</system:String>
+    <system:String x:Key="AutoSpeedUpTip">战斗开始后检查当前倍速，不是二倍速时自动切换。</system:String>
     <system:String x:Key="Ignore">忽略</system:String>
     <system:String x:Key="OperProgress">干员培养</system:String>
     <system:String x:Key="OperProgress.SkillLevelTarget">技能等级 {0}</system:String>
@@ -2890,6 +2896,7 @@ DEBUG 目录下保存的图片有数量限制，超出后会自动清理旧图�
     <system:String x:Key="WeComBotScheduleAdd">添加时间</system:String>
     <system:String x:Key="WeComBotScheduleRemove">删除该时间</system:String>
     <system:String x:Key="WeComBotEditAccount">编辑一键长草</system:String>
+    <system:String x:Key="WeComBotDailyConfig">一键长草</system:String>
     <system:String x:Key="WeComBotAccountEditorTip">这些选项保存在该账号对应的配置档案里，点保存后立即生效；其余细项可在 MAA 任务设置或通过聊天修改。</system:String>
     <system:String x:Key="WeComBotUseMedicine">使用理智药</system:String>
     <system:String x:Key="WeComBotMedicineCount">数量</system:String>
