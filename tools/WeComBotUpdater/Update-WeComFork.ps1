@@ -214,6 +214,23 @@ function Get-SafeInformationalVersion {
     return ""
 }
 
+function Get-SourceVersionTag {
+    param([string]$Ref)
+
+    $VersionResult = Invoke-GitCapture -Arguments @(
+        "describe",
+        "--tags",
+        "--abbrev=0",
+        "--match",
+        "v*",
+        $Ref
+    )
+    if ($VersionResult.ExitCode -ne 0) {
+        return ""
+    }
+    return Get-SafeInformationalVersion (($VersionResult.Output -join "").Trim())
+}
+
 function Get-RepoMaaProcesses {
     $DebugDir = Join-Path $RepoRoot "build\bin\Debug"
     return @(
@@ -228,13 +245,22 @@ function Get-RepoMaaProcesses {
     )
 }
 
-function Get-LatestOfficialRelease {
+function Get-OfficialRelease {
+    param([string]$Version)
+
     $Headers = @{
         Accept = "application/vnd.github+json"
         "User-Agent" = "MAA-WeCom-Bot-Updater"
     }
+    if ($Version) {
+        $SafeVersion = [Uri]::EscapeDataString($Version)
+        $ReleaseUri = "https://api.github.com/repos/MaaAssistantArknights/MaaAssistantArknights/releases/tags/$SafeVersion"
+    }
+    else {
+        $ReleaseUri = "https://api.github.com/repos/MaaAssistantArknights/MaaAssistantArknights/releases/latest"
+    }
     $Release = Invoke-RestMethod `
-        -Uri "https://api.github.com/repos/MaaAssistantArknights/MaaAssistantArknights/releases/latest" `
+        -Uri $ReleaseUri `
         -Headers $Headers
     $Asset = $Release.assets | Where-Object {
         $_.name -match "^MAA-v.+win-x64\.zip$"
@@ -384,8 +410,11 @@ $Behind = [int]$Pair[1]
 Write-Host "企微独有提交：$Ahead；官方领先提交：$Behind"
 
 if ($Behind -eq 0) {
-    Write-Host "已经是最新的官方代码，无需合并。" -ForegroundColor Green
-    exit 0
+    if (-not $RefreshNativeCore) {
+        Write-Host "已经是最新的官方代码，无需合并。" -ForegroundColor Green
+        exit 0
+    }
+    Write-Host "源码已是最新，继续校验并刷新与 UI 匹配的官方内核。" -ForegroundColor Yellow
 }
 
 if ($DryRun) {
@@ -414,28 +443,30 @@ $MaaProcesses = @()
 $MaaWasRunning = $false
 $BuildSucceeded = $true
 try {
-    Write-Step "合并官方 $UpstreamRef"
-    $MergeResult = Invoke-GitCapture -Arguments @("merge", "--no-ff", "--no-edit", $UpstreamRef)
-    $MergeResult.Output | ForEach-Object { Write-Host $_ }
-    if ($MergeResult.ExitCode -ne 0) {
-        $Conflicts = @(
-            & git -c "safe.directory=$RepoRoot" diff --name-only --diff-filter=U 2>$null |
-                Where-Object { $_ }
-        )
-        if (Resolve-LocalizationConflicts -RelativePaths $Conflicts) {
-            Write-Step "自动合并本地化资源（双方新增 key 均保留）"
-            $AddArguments = @("add", "--") + $Conflicts
-            Invoke-Git -Arguments $AddArguments | Out-Null
-            Invoke-Git commit --no-edit | Out-Null
-            Write-Host "本地化资源冲突已自动解决。" -ForegroundColor Green
+    if ($Behind -gt 0) {
+        Write-Step "合并官方 $UpstreamRef"
+        $MergeResult = Invoke-GitCapture -Arguments @("merge", "--no-ff", "--no-edit", $UpstreamRef)
+        $MergeResult.Output | ForEach-Object { Write-Host $_ }
+        if ($MergeResult.ExitCode -ne 0) {
+            $Conflicts = @(
+                & git -c "safe.directory=$RepoRoot" diff --name-only --diff-filter=U 2>$null |
+                    Where-Object { $_ }
+            )
+            if (Resolve-LocalizationConflicts -RelativePaths $Conflicts) {
+                Write-Step "自动合并本地化资源（双方新增 key 均保留）"
+                $AddArguments = @("add", "--") + $Conflicts
+                Invoke-Git -Arguments $AddArguments | Out-Null
+                Invoke-Git commit --no-edit | Out-Null
+                Write-Host "本地化资源冲突已自动解决。" -ForegroundColor Green
+            }
+            else {
+                & git -c "safe.directory=$RepoRoot" merge --abort 2>$null
+                $ConflictText = if ($Conflicts.Count -gt 0) { $Conflicts -join "`n" } else { "未知文件" }
+                throw "官方更新存在冲突，已自动取消合并并恢复原分支。`n冲突文件：`n$ConflictText"
+            }
         }
-        else {
-            & git -c "safe.directory=$RepoRoot" merge --abort 2>$null
-            $ConflictText = if ($Conflicts.Count -gt 0) { $Conflicts -join "`n" } else { "未知文件" }
-            throw "官方更新存在冲突，已自动取消合并并恢复原分支。`n冲突文件：`n$ConflictText"
-        }
+        $MergeSucceeded = $true
     }
-    $MergeSucceeded = $true
 
     Assert-WeComFeature
     Write-Host "企微功能完整性检查通过。" -ForegroundColor Green
@@ -448,28 +479,17 @@ try {
         Start-Sleep -Seconds 2
     }
 
+    $VersionTag = Get-SourceVersionTag $UpstreamRef
     $OfficialRelease = $null
     if ($RefreshNativeCore) {
-        $OfficialRelease = Get-LatestOfficialRelease
+        if (-not $VersionTag) {
+            throw "无法从官方分支确定正式版本号，不能安全匹配 UI 与 Core。"
+        }
+        $OfficialRelease = Get-OfficialRelease -Version $VersionTag
     }
 
     if (-not $NoBuild) {
         $DotNet = Resolve-DotNet
-        $VersionResult = Invoke-GitCapture -Arguments @(
-            "describe",
-            "--tags",
-            "--abbrev=0",
-            "--match",
-            "v*",
-            $UpstreamRef
-        )
-        $VersionTag = ""
-        if ($VersionResult.ExitCode -eq 0) {
-            $VersionTag = Get-SafeInformationalVersion (($VersionResult.Output -join "").Trim())
-        }
-        if (-not $VersionTag -and $OfficialRelease) {
-            $VersionTag = Get-SafeInformationalVersion $OfficialRelease.Tag
-        }
         $BuildArgs = @(
             "build",
             (Join-Path $RepoRoot "src/MaaWpfGui/MaaWpfGui.csproj"),

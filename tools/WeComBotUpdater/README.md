@@ -23,7 +23,7 @@
 
 ## 官方内核更新
 
-`-RefreshNativeCore` 会从 GitHub 最新正式 Release 下载 Windows x64 包，只同步以下原生文件：
+`-RefreshNativeCore` 会读取官方源码对应的 `v*` 版本，并下载同一版本的 Windows x64 Release 包，只同步以下原生文件：
 
 - `MaaCore.dll`
 - `MaaAdbControlUnit.dll`
@@ -35,6 +35,8 @@
 - `fastdeploy_ppocr_maa.dll`
 
 不会覆盖自定义 `MAA.dll`、`MAA.exe`、`config`、`cache`、`data` 或企微配置。旧原生文件会备份到 `.updater-backups/native-core-时间戳`。
+
+即使源码已经是最新提交，使用“含官方内核”入口也会重新校验并刷新同版本 Core，可用于修复 UI/Core 版本不一致。更新器不会再把源码 `v6.20.0-beta.1` 与最新稳定版 `v6.19.0` 混用。
 
 ## 高级参数
 
