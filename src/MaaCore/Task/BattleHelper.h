@@ -41,6 +41,8 @@ protected:
     virtual const std::string oper_name_ocr_task_name() const noexcept { return "BattleOperName"; }
 
     virtual bool do_strategic_action(const cv::Mat& reusable = cv::Mat());
+    bool run_battle_assist(bool auto_use_skills, bool auto_speed_up);
+    bool use_all_ready_skills_on_battlefield(const cv::Mat& reusable = cv::Mat());
 
     bool calc_tiles_info(const std::string& stage_name, double shift_x = 0, double shift_y = 0);
 
@@ -138,6 +140,7 @@ protected:
     std::unordered_map<battle::OperNameTag, int> m_skill_error_count;
     // 上次使用技能的时间, <实际职业,名称> -> <时间>
     std::unordered_map<battle::OperNameTag, std::chrono::steady_clock::time_point> m_last_use_skill_time;
+    std::map<Point, std::chrono::steady_clock::time_point> m_last_auto_skill_use;
     int m_camera_count = 0;
     bool m_in_speedup = false; // 是否处于2倍速
     std::pair<double, double> m_camera_shift = { 0., 0. };

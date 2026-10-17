@@ -954,7 +954,7 @@ If the game is launched in portrait mode and then switched to landscape, it may 
     <system:String x:Key="Combat">Combat</system:String>
     <system:String x:Key="Fight">{key=Combat}</system:String>
     <system:String x:Key="BattleAssist">Battle assistance</system:String>
-    <system:String x:Key="BattleAssistTip">Affects Fight tasks only. Auto skill activation continuously detects ready skill indicators, while auto speed checks and switches to 2× speed at the start of every battle.</system:String>
+    <system:String x:Key="BattleAssistTip">Can take over the currently active manual battle and also applies automatically to every Fight task in the same profile without requiring a specific stage.</system:String>
     <system:String x:Key="AutoUseSkills">Auto-activate skills</system:String>
     <system:String x:Key="AutoUseSkillsTip">Scans all deployed operators about every 1.5 seconds and activates ready skills immediately. Skill types are not distinguished, so stages that require manual skill timing may not work well.</system:String>
     <system:String x:Key="AutoSpeedUp">Start battles at 2× speed</system:String>

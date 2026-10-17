@@ -1,7 +1,5 @@
 #pragma once
 
-#include <chrono>
-#include <map>
 #include "Task/AbstractTaskPlugin.h"
 #include "Task/BattleHelper.h"
 
@@ -22,10 +20,7 @@ protected:
     virtual AbstractTask& this_task() override { return *this; }
 
 private:
-    bool use_all_ready_skills_on_battlefield(const cv::Mat& image);
-
     bool m_auto_use_skills = false;
     bool m_auto_speed_up = false;
-    std::map<Point, std::chrono::steady_clock::time_point> m_last_auto_skill_use;
 };
 }

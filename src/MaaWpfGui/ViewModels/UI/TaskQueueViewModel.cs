@@ -1314,7 +1314,22 @@ public class TaskQueueViewModel : Screen
             ConfigFactory.CurrentConfig.TaskQueue.Add(new UserDataUpdateTask());
         }
 
-        if (!ConfigFactory.CurrentConfig.TaskQueue.OfType<BattleAssistTask>().Any())
+        var battleAssistTasks = ConfigFactory.CurrentConfig.TaskQueue.OfType<BattleAssistTask>().ToList();
+        if (battleAssistTasks.Count > 1)
+        {
+            var preferred = battleAssistTasks.FirstOrDefault(task => task.IsEnable != false && (task.AutoUseSkills || task.AutoSpeedUp))
+                ?? battleAssistTasks.FirstOrDefault(task => task.IsEnable != false)
+                ?? battleAssistTasks[0];
+            foreach (var duplicate in battleAssistTasks)
+            {
+                ConfigFactory.CurrentConfig.TaskQueue.Remove(duplicate);
+            }
+
+            var fight = ConfigFactory.CurrentConfig.TaskQueue.OfType<FightTask>().FirstOrDefault();
+            int fightIndex = fight is null ? -1 : ConfigFactory.CurrentConfig.TaskQueue.IndexOf(fight);
+            ConfigFactory.CurrentConfig.TaskQueue.Insert(fightIndex >= 0 ? fightIndex + 1 : 0, preferred);
+        }
+        else if (battleAssistTasks.Count == 0)
         {
             var fight = ConfigFactory.CurrentConfig.TaskQueue.OfType<FightTask>().FirstOrDefault();
             int fightIndex = fight is null ? -1 : ConfigFactory.CurrentConfig.TaskQueue.IndexOf(fight);
@@ -1762,6 +1777,12 @@ public class TaskQueueViewModel : Screen
     /// </summary>
     public int StartUpTaskCount => ConfigFactory.CurrentConfig.TaskQueue.Count(t => t is StartUpTask);
 
+    /// <summary>
+    /// Gets the number of BattleAssist tasks in the task queue.
+    /// 战斗辅助为档案级设置，至多一个。
+    /// </summary>
+    public int BattleAssistTaskCount => ConfigFactory.CurrentConfig.TaskQueue.Count(t => t is BattleAssistTask);
+
     public static ReadOnlyCollection<TaskTypeItem> TaskTypeList { get; } = Array.AsReadOnly(
         [
             new TaskTypeItem(LocalizationHelper.GetString("StartUp"), typeof(StartUpTask)),
@@ -1923,6 +1944,10 @@ public class TaskQueueViewModel : Screen
     {
         // 开始唤醒任务至多一个，菜单项禁用之外的行为兜底
         if (taskName == typeof(StartUpTask) && StartUpTaskCount >= 1)
+        {
+            return;
+        }
+        if (taskName == typeof(BattleAssistTask) && BattleAssistTaskCount >= 1)
         {
             return;
         }

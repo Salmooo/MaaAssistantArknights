@@ -13,6 +13,7 @@
 #include "Utils/DebugImageHelper.hpp"
 #include "Utils/Logger.hpp"
 #include "Vision/Battle/BattlefieldClassifier.h"
+#include "Vision/Battle/BattlefieldDetector.h"
 #include "Vision/Battle/BattlefieldMatcher.h"
 #include "Vision/Matcher.h"
 #include "Vision/MultiMatcher.h"
@@ -48,6 +49,7 @@ void asst::BattleHelper::clear()
     m_skill_times.clear();
     m_skill_error_count.clear();
     m_last_use_skill_time.clear();
+    m_last_auto_skill_use.clear();
     m_camera_count = 0;
     m_camera_shift = { 0., 0. };
 
@@ -792,6 +794,110 @@ bool asst::BattleHelper::do_strategic_action(const cv::Mat& reusable)
 {
     cv::Mat image = reusable.empty() ? m_inst_helper.ctrler()->get_image() : reusable;
     return use_all_ready_skill(image);
+}
+
+bool asst::BattleHelper::run_battle_assist(bool auto_use_skills, bool auto_speed_up)
+{
+    LogTraceFunction;
+
+    auto image = m_inst_helper.ctrler()->get_image();
+    if (!check_in_battle(image, false)) {
+        LogWarn << __FUNCTION__ << "battle is not active";
+        return false;
+    }
+
+    if (auto_speed_up) {
+        m_in_speedup = check_in_speedup(image);
+        if (m_in_speedup) {
+            LogInfo << __FUNCTION__ << "2x battle speed already enabled";
+        }
+        else if (speed_up()) {
+            m_in_speedup = true;
+            LogInfo << __FUNCTION__ << "enabled 2x battle speed";
+        }
+    }
+
+    using clock = std::chrono::steady_clock;
+    constexpr auto skill_scan_interval = std::chrono::milliseconds(1500);
+    auto last_skill_scan = clock::now() - skill_scan_interval;
+
+    while (!m_inst_helper.need_exit()) {
+        image = m_inst_helper.ctrler()->get_image();
+        if (!check_in_battle(image, false)) {
+            break;
+        }
+
+        if (auto_use_skills && clock::now() - last_skill_scan >= skill_scan_interval) {
+            use_all_ready_skills_on_battlefield(image);
+            last_skill_scan = clock::now();
+        }
+        m_inst_helper.sleep(200);
+    }
+    return true;
+}
+
+bool asst::BattleHelper::use_all_ready_skills_on_battlefield(const cv::Mat& reusable)
+{
+    const cv::Mat image = reusable.empty() ? m_inst_helper.ctrler()->get_image() : reusable;
+
+    BattlefieldDetector detector(image);
+    detector.set_object_of_interest({ .operators = true });
+    auto detector_result = detector.analyze();
+    if (!detector_result || detector_result->operators.empty()) {
+        return false;
+    }
+
+    struct ReadyOperator
+    {
+        Point click_point;
+        Point classifier_base;
+    };
+    std::vector<ReadyOperator> ready_operators;
+    ready_operators.reserve(detector_result->operators.size());
+
+    for (const auto& oper : detector_result->operators) {
+        const Point click_point {
+            oper.rect.x + oper.rect.width / 2,
+            oper.rect.y + oper.rect.height / 2,
+        };
+        const std::array<double, 3> base_ratios { 0.75, 1.0, 1.15 };
+        for (double ratio : base_ratios) {
+            const Point classifier_base {
+                oper.rect.x + oper.rect.width / 2,
+                oper.rect.y + static_cast<int>(oper.rect.height * ratio),
+            };
+            BattlefieldClassifier classifier(image);
+            classifier.set_object_of_interest({ .skill_ready = true });
+            classifier.set_base_point(classifier_base);
+            auto result = classifier.analyze();
+            if (result && result->skill_ready.ready) {
+                ready_operators.emplace_back(ReadyOperator { click_point, classifier_base });
+                break;
+            }
+        }
+    }
+
+    bool used = false;
+    const auto now = std::chrono::steady_clock::now();
+    constexpr auto same_tile_cooldown = std::chrono::seconds(5);
+    for (const auto& [click_point, classifier_base] : ready_operators) {
+        if (m_inst_helper.need_exit()) {
+            break;
+        }
+        if (auto iter = m_last_auto_skill_use.find(click_point);
+            iter != m_last_auto_skill_use.cend() && now - iter->second < same_tile_cooldown) {
+            continue;
+        }
+
+        const int pre_delay = Task.get("BattleUseOper")->pre_delay;
+        if (m_inst_helper.ctrler()->click(click_point) && m_inst_helper.sleep(pre_delay)
+            && ProcessTask(this_task(), { "BattleUseSkillJustClick" }).run()) {
+            used = true;
+            m_last_auto_skill_use[click_point] = now;
+            LogInfo << __FUNCTION__ << "used ready skill at" << click_point << "classifier base" << classifier_base;
+        }
+    }
+    return used;
 }
 
 bool asst::BattleHelper::use_all_ready_skill(const cv::Mat& reusable)

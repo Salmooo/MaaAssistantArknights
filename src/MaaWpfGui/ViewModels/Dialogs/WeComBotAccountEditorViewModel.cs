@@ -79,7 +79,21 @@ public class WeComBotAccountEditorViewModel : Screen
 
         var start = _profile.TaskQueue.OfType<StartUpTask>().FirstOrDefault();
         var fight = _profile.TaskQueue.OfType<FightTask>().FirstOrDefault();
-        if (_profile.TaskQueue.OfType<BattleAssistTask>().FirstOrDefault() is null)
+        var battleAssistTasks = _profile.TaskQueue.OfType<BattleAssistTask>().ToList();
+        if (battleAssistTasks.Count > 1)
+        {
+            var preferred = battleAssistTasks.FirstOrDefault(task => task.IsEnable != false && (task.AutoUseSkills || task.AutoSpeedUp))
+                ?? battleAssistTasks.FirstOrDefault(task => task.IsEnable != false)
+                ?? battleAssistTasks[0];
+            foreach (var duplicate in battleAssistTasks)
+            {
+                _profile.TaskQueue.Remove(duplicate);
+            }
+
+            int fightIndex = fight is null ? -1 : _profile.TaskQueue.IndexOf(fight);
+            _profile.TaskQueue.Insert(fightIndex >= 0 ? fightIndex + 1 : 0, preferred);
+        }
+        else if (battleAssistTasks.Count == 0)
         {
             int fightIndex = fight is null ? -1 : _profile.TaskQueue.IndexOf(fight);
             _profile.TaskQueue.Insert(fightIndex >= 0 ? fightIndex + 1 : 0, new BattleAssistTask());
