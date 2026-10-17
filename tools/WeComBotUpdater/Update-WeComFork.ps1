@@ -34,8 +34,16 @@ function Invoke-Git {
         [string[]]$Arguments
     )
 
-    $Output = & git -c "safe.directory=$RepoRoot" @Arguments 2>&1
-    if ($LASTEXITCODE -ne 0) {
+    $PreviousErrorAction = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        $Output = & git -c "safe.directory=$RepoRoot" @Arguments 2>&1
+        $ExitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $PreviousErrorAction
+    }
+    if ($ExitCode -ne 0) {
         $Text = ($Output | Out-String).Trim()
         throw "git $($Arguments -join ' ') 失败：`n$Text"
     }
@@ -312,9 +320,11 @@ $MaaWasRunning = $false
 $BuildSucceeded = $true
 try {
     Write-Step "合并官方 $UpstreamRef"
-    $MergeOutput = & git -c "safe.directory=$RepoRoot" merge --no-ff --no-edit $UpstreamRef 2>&1
-    $MergeOutput | ForEach-Object { Write-Host $_ }
-    if ($LASTEXITCODE -ne 0) {
+    try {
+        $MergeOutput = Invoke-Git merge --no-ff --no-edit $UpstreamRef
+        $MergeOutput | ForEach-Object { Write-Host $_ }
+    }
+    catch {
         $Conflicts = @(& git -c "safe.directory=$RepoRoot" diff --name-only --diff-filter=U 2>$null)
         & git -c "safe.directory=$RepoRoot" merge --abort 2>$null
         $ConflictText = if ($Conflicts.Count -gt 0) { $Conflicts -join "`n" } else { "未知文件" }
