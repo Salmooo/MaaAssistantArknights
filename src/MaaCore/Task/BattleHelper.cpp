@@ -849,14 +849,15 @@ bool asst::BattleHelper::use_all_ready_skills_on_battlefield(const cv::Mat& reus
 
     struct ReadyOperator
     {
-        Point click_point;
+        Point cooldown_key;
+        Point icon_center;
         Point classifier_base;
     };
     std::vector<ReadyOperator> ready_operators;
     ready_operators.reserve(detector_result->operators.size());
 
     for (const auto& oper : detector_result->operators) {
-        const Point click_point {
+        const Point cooldown_key {
             oper.rect.x + oper.rect.width / 2,
             oper.rect.y + oper.rect.height / 2,
         };
@@ -871,7 +872,12 @@ bool asst::BattleHelper::use_all_ready_skills_on_battlefield(const cv::Mat& reus
             classifier.set_base_point(classifier_base);
             auto result = classifier.analyze();
             if (result && result->skill_ready.ready) {
-                ready_operators.emplace_back(ReadyOperator { click_point, classifier_base });
+                const Rect& ready_rect = result->skill_ready.rect;
+                const Point icon_center {
+                    ready_rect.x + ready_rect.width / 2,
+                    ready_rect.y + ready_rect.height / 2,
+                };
+                ready_operators.emplace_back(ReadyOperator { cooldown_key, icon_center, classifier_base });
                 break;
             }
         }
@@ -880,22 +886,24 @@ bool asst::BattleHelper::use_all_ready_skills_on_battlefield(const cv::Mat& reus
     bool used = false;
     const auto now = std::chrono::steady_clock::now();
     constexpr auto same_tile_cooldown = std::chrono::seconds(5);
-    for (const auto& [click_point, classifier_base] : ready_operators) {
+    for (const auto& [cooldown_key, icon_center, classifier_base] : ready_operators) {
         if (m_inst_helper.need_exit()) {
             break;
         }
-        if (auto iter = m_last_auto_skill_use.find(click_point);
+        if (auto iter = m_last_auto_skill_use.find(cooldown_key);
             iter != m_last_auto_skill_use.cend() && now - iter->second < same_tile_cooldown) {
             continue;
         }
 
-        const int pre_delay = Task.get("BattleUseOper")->pre_delay;
-        if (m_inst_helper.ctrler()->click(click_point) && m_inst_helper.sleep(pre_delay)
-            && ProcessTask(this_task(), { "BattleUseSkillJustClick" }).run()) {
+        if (m_inst_helper.ctrler()->click(icon_center)) {
             used = true;
-            m_last_auto_skill_use[click_point] = now;
-            LogInfo << __FUNCTION__ << "used ready skill at" << click_point << "classifier base" << classifier_base;
+            m_last_auto_skill_use[cooldown_key] = now;
+            LogInfo << __FUNCTION__ << "clicked ready skill icon at" << icon_center << "classifier base"
+                    << classifier_base;
         }
+        // A missed icon click may select an operator or enter deployment mode. Clear either state immediately.
+        m_inst_helper.sleep(250);
+        cancel_oper_selection();
     }
     return used;
 }
