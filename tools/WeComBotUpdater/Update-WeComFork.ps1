@@ -28,7 +28,7 @@ function Write-Step {
     Write-Host "==> $Message" -ForegroundColor Cyan
 }
 
-function Invoke-Git {
+function Invoke-GitCapture {
     param(
         [Parameter(ValueFromRemainingArguments = $true)]
         [string[]]$Arguments
@@ -43,6 +43,21 @@ function Invoke-Git {
     finally {
         $ErrorActionPreference = $PreviousErrorAction
     }
+    return [pscustomobject]@{
+        ExitCode = $ExitCode
+        Output = @($Output)
+    }
+}
+
+function Invoke-Git {
+    param(
+        [Parameter(ValueFromRemainingArguments = $true)]
+        [string[]]$Arguments
+    )
+
+    $Result = Invoke-GitCapture -Arguments $Arguments
+    $Output = $Result.Output
+    $ExitCode = $Result.ExitCode
     if ($ExitCode -ne 0) {
         $Text = ($Output | Out-String).Trim()
         throw "git $($Arguments -join ' ') 失败：`n$Text"
@@ -95,6 +110,73 @@ function Assert-WeComFeature {
             throw "合并后企微注册缺失：$($Check.Path) 中找不到 $($Check.Text)"
         }
     }
+}
+
+function Resolve-LocalizationConflicts {
+    param([string[]]$RelativePaths)
+
+    if ($RelativePaths.Count -eq 0) {
+        return $false
+    }
+
+    $Pattern = [regex]::new(
+        "(?ms)^<<<<<<< [^\r\n]*\r?\n(.*?)^=======\r?\n(.*?)^>>>>>>> [^\r\n]*\r?\n"
+    )
+    foreach ($RelativePath in $RelativePaths) {
+        $Normalized = $RelativePath.Replace("\", "/")
+        if ($Normalized -notmatch "^src/MaaWpfGui/Res/Localizations/[^/]+\.xaml$") {
+            return $false
+        }
+
+        $Path = Get-RequiredFilePath $Normalized
+        $Bytes = [IO.File]::ReadAllBytes($Path)
+        $HasBom = $Bytes.Length -ge 3 -and $Bytes[0] -eq 0xEF -and $Bytes[1] -eq 0xBB -and $Bytes[2] -eq 0xBF
+        $Text = [IO.File]::ReadAllText($Path, [Text.UTF8Encoding]::new($false))
+        $Matches = $Pattern.Matches($Text)
+        if ($Matches.Count -eq 0) {
+            return $false
+        }
+
+        for ($Index = $Matches.Count - 1; $Index -ge 0; $Index--) {
+            $Match = $Matches[$Index]
+            $Ours = $Match.Groups[1].Value
+            $Theirs = $Match.Groups[2].Value
+            $OurKeys = @(
+                [regex]::Matches($Ours, 'x:Key="([^"]+)"') |
+                    ForEach-Object { $_.Groups[1].Value }
+            )
+            $TheirKeys = @(
+                [regex]::Matches($Theirs, 'x:Key="([^"]+)"') |
+                    ForEach-Object { $_.Groups[1].Value }
+            )
+            $Duplicates = @($OurKeys | Where-Object { $TheirKeys -contains $_ })
+            if ($Duplicates.Count -gt 0 -or ($OurKeys.Count -eq 0 -and $TheirKeys.Count -eq 0)) {
+                return $false
+            }
+
+            $NewLine = if ($Match.Value.Contains("`r`n")) { "`r`n" } else { "`n" }
+            $Left = $Ours.Trim("`r", "`n")
+            $Right = $Theirs.Trim("`r", "`n")
+            $Replacement = $Left + $NewLine + $NewLine + $Right + $NewLine
+            $Text = $Text.Substring(0, $Match.Index) + $Replacement +
+                $Text.Substring($Match.Index + $Match.Length)
+        }
+
+        if ($Text.Contains("<<<<<<<") -or $Text.Contains(">>>>>>>") -or $Pattern.IsMatch($Text)) {
+            return $false
+        }
+        try {
+            [xml]$Parsed = $Text
+        }
+        catch {
+            return $false
+        }
+        if (-not $Parsed.ResourceDictionary) {
+            return $false
+        }
+        [IO.File]::WriteAllText($Path, $Text, [Text.UTF8Encoding]::new($HasBom))
+    }
+    return $true
 }
 
 function Resolve-DotNet {
@@ -320,15 +402,24 @@ $MaaWasRunning = $false
 $BuildSucceeded = $true
 try {
     Write-Step "合并官方 $UpstreamRef"
-    try {
-        $MergeOutput = Invoke-Git merge --no-ff --no-edit $UpstreamRef
-        $MergeOutput | ForEach-Object { Write-Host $_ }
-    }
-    catch {
-        $Conflicts = @(& git -c "safe.directory=$RepoRoot" diff --name-only --diff-filter=U 2>$null)
-        & git -c "safe.directory=$RepoRoot" merge --abort 2>$null
-        $ConflictText = if ($Conflicts.Count -gt 0) { $Conflicts -join "`n" } else { "未知文件" }
-        throw "官方更新存在冲突，已自动取消合并并恢复原分支。`n冲突文件：`n$ConflictText"
+    $MergeResult = Invoke-GitCapture -Arguments @("merge", "--no-ff", "--no-edit", $UpstreamRef)
+    $MergeResult.Output | ForEach-Object { Write-Host $_ }
+    if ($MergeResult.ExitCode -ne 0) {
+        $Conflicts = @(
+            & git -c "safe.directory=$RepoRoot" diff --name-only --diff-filter=U 2>$null |
+                Where-Object { $_ }
+        )
+        if (Resolve-LocalizationConflicts -RelativePaths $Conflicts) {
+            Write-Step "自动合并本地化资源（双方新增 key 均保留）"
+            Invoke-Git add -- $Conflicts | Out-Null
+            Invoke-Git commit --no-edit | Out-Null
+            Write-Host "本地化资源冲突已自动解决。" -ForegroundColor Green
+        }
+        else {
+            & git -c "safe.directory=$RepoRoot" merge --abort 2>$null
+            $ConflictText = if ($Conflicts.Count -gt 0) { $Conflicts -join "`n" } else { "未知文件" }
+            throw "官方更新存在冲突，已自动取消合并并恢复原分支。`n冲突文件：`n$ConflictText"
+        }
     }
     $MergeSucceeded = $true
 
