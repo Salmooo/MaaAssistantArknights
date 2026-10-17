@@ -411,7 +411,8 @@ try {
         )
         if (Resolve-LocalizationConflicts -RelativePaths $Conflicts) {
             Write-Step "自动合并本地化资源（双方新增 key 均保留）"
-            Invoke-Git add -- $Conflicts | Out-Null
+            $AddArguments = @("add", "--") + $Conflicts
+            Invoke-Git -Arguments $AddArguments | Out-Null
             Invoke-Git commit --no-edit | Out-Null
             Write-Host "本地化资源冲突已自动解决。" -ForegroundColor Green
         }
