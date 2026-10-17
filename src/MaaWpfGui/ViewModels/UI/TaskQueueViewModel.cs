@@ -99,6 +99,11 @@ public class TaskQueueViewModel : Screen
     public static FightSettingsUserControlModel FightTask => FightSettingsUserControlModel.Instance;
 
     /// <summary>
+    /// Gets 理智作战战斗辅助Model
+    /// </summary>
+    public static BattleAssistSettingsUserControlModel BattleAssistTask => BattleAssistSettingsUserControlModel.Instance;
+
+    /// <summary>
     /// Gets 干员培养任务Model
     /// </summary>
     public static OperProgressTaskUserControlModel OperProgressTask => OperProgressTaskUserControlModel.Instance;
@@ -1297,6 +1302,7 @@ public class TaskQueueViewModel : Screen
         {
             ConfigFactory.CurrentConfig.TaskQueue.Add(new StartUpTask());
             ConfigFactory.CurrentConfig.TaskQueue.Add(new FightTask());
+            ConfigFactory.CurrentConfig.TaskQueue.Add(new BattleAssistTask());
             ConfigFactory.CurrentConfig.TaskQueue.Add(new InfrastTask());
             ConfigFactory.CurrentConfig.TaskQueue.Add(new RecruitTask());
             ConfigFactory.CurrentConfig.TaskQueue.Add(new MallTask());
@@ -1306,6 +1312,13 @@ public class TaskQueueViewModel : Screen
             ConfigFactory.CurrentConfig.TaskQueue.Add(new RoguelikeTask());
             ConfigFactory.CurrentConfig.TaskQueue.Add(new ReclamationTask());
             ConfigFactory.CurrentConfig.TaskQueue.Add(new UserDataUpdateTask());
+        }
+
+        if (!ConfigFactory.CurrentConfig.TaskQueue.OfType<BattleAssistTask>().Any())
+        {
+            var fight = ConfigFactory.CurrentConfig.TaskQueue.OfType<FightTask>().FirstOrDefault();
+            int fightIndex = fight is null ? -1 : ConfigFactory.CurrentConfig.TaskQueue.IndexOf(fight);
+            ConfigFactory.CurrentConfig.TaskQueue.Insert(fightIndex >= 0 ? fightIndex + 1 : 0, new BattleAssistTask());
         }
 
         // 临时补足到8个，支持添加删除后移除此代码
@@ -1753,6 +1766,7 @@ public class TaskQueueViewModel : Screen
         [
             new TaskTypeItem(LocalizationHelper.GetString("StartUp"), typeof(StartUpTask)),
             new TaskTypeItem(LocalizationHelper.GetString("Fight"), typeof(FightTask)),
+            new TaskTypeItem(LocalizationHelper.GetString("BattleAssist"), typeof(BattleAssistTask)),
             new TaskTypeItem(LocalizationHelper.GetString("Infrast"), typeof(InfrastTask)),
             new TaskTypeItem(LocalizationHelper.GetString("Recruit"), typeof(RecruitTask)),
             new TaskTypeItem(LocalizationHelper.GetString("Mall"), typeof(MallTask)),
@@ -1773,6 +1787,7 @@ public class TaskQueueViewModel : Screen
             item.Display = item.Value.Name switch {
                 nameof(StartUpTask) => LocalizationHelper.GetString("StartUp"),
                 nameof(FightTask) => LocalizationHelper.GetString("Fight"),
+                nameof(BattleAssistTask) => LocalizationHelper.GetString("BattleAssist"),
                 nameof(InfrastTask) => LocalizationHelper.GetString("Infrast"),
                 nameof(RecruitTask) => LocalizationHelper.GetString("Recruit"),
                 nameof(MallTask) => LocalizationHelper.GetString("Mall"),

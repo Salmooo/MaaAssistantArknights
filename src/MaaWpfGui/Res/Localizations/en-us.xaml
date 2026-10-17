@@ -2846,6 +2846,8 @@ Sanity stage: {2}</system:String>
     <system:String x:Key="WeComBotScheduleRemove">Remove this time</system:String>
     <system:String x:Key="WeComBotEditAccount">Edit daily clear</system:String>
     <system:String x:Key="WeComBotDailyConfig">Daily clear</system:String>
+    <system:String x:Key="WeComBotEnableBattleAssist">Enable battle assistance</system:String>
+    <system:String x:Key="WeComBotEnableBattleAssistTip">When enabled, all Fight tasks in this account profile use the battle assistance options below without requiring a specific stage.</system:String>
     <system:String x:Key="WeComBotAccountEditorTip">These options are saved in the profile linked to this account and take effect immediately. Other options are available in MAA's task settings or through chat.</system:String>
     <system:String x:Key="WeComBotUseMedicine">Use sanity potions</system:String>
     <system:String x:Key="WeComBotMedicineCount">Count</system:String>

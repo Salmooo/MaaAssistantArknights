@@ -114,7 +114,6 @@ bool asst::FightTask::set_params(const json::value& params)
     const bool auto_use_skills = params.get("auto_use_skills", false);
     const bool auto_speed_up = params.get("auto_speed_up", false);
     m_battle_assist_plugin_ptr->set_options(auto_use_skills, auto_speed_up);
-    m_battle_assist_plugin_ptr->set_fight_stage(stage);
 
     if (auto opt = params.find<json::object>("drops")) {
         std::unordered_map<std::string, int> drops;

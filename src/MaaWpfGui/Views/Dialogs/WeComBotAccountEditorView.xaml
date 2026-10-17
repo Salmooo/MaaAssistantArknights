@@ -125,6 +125,16 @@
                         TextWrapping="Wrap" />
                     <CheckBox
                         Margin="0,6"
+                        Content="{DynamicResource WeComBotEnableBattleAssist}"
+                        IsChecked="{Binding BattleAssistEnabled}" />
+                    <controls:TextBlock
+                        Margin="24,0,0,12"
+                        FontSize="12"
+                        Foreground="{DynamicResource SecondaryTextBrush}"
+                        Text="{DynamicResource WeComBotEnableBattleAssistTip}"
+                        TextWrapping="Wrap" />
+                    <CheckBox
+                        Margin="0,6"
                         Content="{DynamicResource AutoUseSkills}"
                         IsChecked="{Binding AutoUseSkills}" />
                     <controls:TextBlock

@@ -79,6 +79,12 @@ public class WeComBotAccountEditorViewModel : Screen
 
         var start = _profile.TaskQueue.OfType<StartUpTask>().FirstOrDefault();
         var fight = _profile.TaskQueue.OfType<FightTask>().FirstOrDefault();
+        if (_profile.TaskQueue.OfType<BattleAssistTask>().FirstOrDefault() is null)
+        {
+            int fightIndex = fight is null ? -1 : _profile.TaskQueue.IndexOf(fight);
+            _profile.TaskQueue.Insert(fightIndex >= 0 ? fightIndex + 1 : 0, new BattleAssistTask());
+        }
+        var battleAssist = _profile.TaskQueue.OfType<BattleAssistTask>().FirstOrDefault();
         _profileStage = fight?.StagePlan.FirstOrDefault() ?? string.Empty;
         _originalStage = account.Stage ?? string.Empty;
         AccountSwitchName = start?.AccountName ?? string.Empty;
@@ -86,8 +92,9 @@ public class WeComBotAccountEditorViewModel : Screen
         Stage = string.IsNullOrWhiteSpace(account.Stage) ? fight?.StagePlan.FirstOrDefault() ?? string.Empty : account.Stage;
         UseMedicine = fight?.UseMedicine ?? false;
         MedicineCount = fight?.MedicineCount ?? 0;
-        AutoUseSkills = fight?.AutoUseSkills ?? false;
-        AutoSpeedUp = fight?.AutoSpeedUp ?? false;
+        AutoUseSkills = battleAssist?.AutoUseSkills ?? false;
+        AutoSpeedUp = battleAssist?.AutoSpeedUp ?? false;
+        BattleAssistEnabled = IsEnabled<BattleAssistTask>();
         FightEnabled = IsEnabled<FightTask>();
         InfrastEnabled = IsEnabled<InfrastTask>();
         RecruitEnabled = IsEnabled<RecruitTask>();
@@ -111,6 +118,8 @@ public class WeComBotAccountEditorViewModel : Screen
     public bool AutoUseSkills { get; set; }
 
     public bool AutoSpeedUp { get; set; }
+
+    public bool BattleAssistEnabled { get; set; }
 
     public bool FightEnabled { get; set; }
 
@@ -150,11 +159,17 @@ public class WeComBotAccountEditorViewModel : Screen
 
             fight.UseMedicine = UseMedicine;
             fight.MedicineCount = MedicineCount;
-            fight.AutoUseSkills = AutoUseSkills;
-            fight.AutoSpeedUp = AutoSpeedUp;
+        }
+
+        var battleAssist = _profile.TaskQueue.OfType<BattleAssistTask>().FirstOrDefault();
+        if (battleAssist is not null)
+        {
+            battleAssist.AutoUseSkills = AutoUseSkills;
+            battleAssist.AutoSpeedUp = AutoSpeedUp;
         }
 
         SetEnabled<FightTask>(FightEnabled);
+        SetEnabled<BattleAssistTask>(BattleAssistEnabled);
         SetEnabled<InfrastTask>(InfrastEnabled);
         SetEnabled<RecruitTask>(RecruitEnabled);
         SetEnabled<MallTask>(MallEnabled);
@@ -202,6 +217,7 @@ public class WeComBotAccountEditorViewModel : Screen
     {
         profile.TaskQueue.Add(new StartUpTask());
         profile.TaskQueue.Add(new FightTask());
+        profile.TaskQueue.Add(new BattleAssistTask());
         profile.TaskQueue.Add(new InfrastTask());
         profile.TaskQueue.Add(new RecruitTask());
         profile.TaskQueue.Add(new MallTask());

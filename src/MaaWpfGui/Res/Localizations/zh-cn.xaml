@@ -2897,6 +2897,8 @@ DEBUG 目录下保存的图片有数量限制，超出后会自动清理旧图�
     <system:String x:Key="WeComBotScheduleRemove">删除该时间</system:String>
     <system:String x:Key="WeComBotEditAccount">编辑一键长草</system:String>
     <system:String x:Key="WeComBotDailyConfig">一键长草</system:String>
+    <system:String x:Key="WeComBotEnableBattleAssist">启用战斗辅助</system:String>
+    <system:String x:Key="WeComBotEnableBattleAssistTip">启用后，该账号档案内的所有理智作战都会应用下面的战斗辅助选项，无需指定关卡。</system:String>
     <system:String x:Key="WeComBotAccountEditorTip">这些选项保存在该账号对应的配置档案里，点保存后立即生效；其余细项可在 MAA 任务设置或通过聊天修改。</system:String>
     <system:String x:Key="WeComBotUseMedicine">使用理智药</system:String>
     <system:String x:Key="WeComBotMedicineCount">数量</system:String>

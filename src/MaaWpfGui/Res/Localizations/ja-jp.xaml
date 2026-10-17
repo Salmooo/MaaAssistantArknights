@@ -2846,6 +2846,8 @@ MAA を複数開くには、新しい MAA を他のフォルダにコピーし�
     <system:String x:Key="WeComBotScheduleRemove">この時刻を削除</system:String>
     <system:String x:Key="WeComBotEditAccount">デイリー設定を編集</system:String>
     <system:String x:Key="WeComBotDailyConfig">デイリークリア</system:String>
+    <system:String x:Key="WeComBotEnableBattleAssist">戦闘補助を有効化</system:String>
+    <system:String x:Key="WeComBotEnableBattleAssistTip">有効にすると、このアカウント設定内のすべての理性作戦に以下の戦闘補助が適用されます。ステージ指定は不要です。</system:String>
     <system:String x:Key="WeComBotAccountEditorTip">これらのオプションはこのアカウントに対応するプロファイルに保存され、保存後すぐに反映されます。その他の項目は MAA のタスク設定またはチャットから変更できます。</system:String>
     <system:String x:Key="WeComBotUseMedicine">理性回復剤を使用</system:String>
     <system:String x:Key="WeComBotMedicineCount">個数</system:String>

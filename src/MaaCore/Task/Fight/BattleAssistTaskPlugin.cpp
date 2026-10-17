@@ -1,11 +1,13 @@
 #include "BattleAssistTaskPlugin.h"
 
+#include <array>
 #include <chrono>
 #include <vector>
 
 #include "Config/TaskData.h"
 #include "Controller/Controller.h"
 #include "Utils/Logger.hpp"
+#include "Vision/Battle/BattlefieldDetector.h"
 #include "Vision/Battle/BattlefieldClassifier.h"
 
 asst::BattleAssistTaskPlugin::BattleAssistTaskPlugin(
@@ -21,21 +23,6 @@ void asst::BattleAssistTaskPlugin::set_options(bool auto_use_skills, bool auto_s
 {
     m_auto_use_skills = auto_use_skills;
     m_auto_speed_up = auto_speed_up;
-}
-
-bool asst::BattleAssistTaskPlugin::set_fight_stage(const std::string& stage)
-{
-    m_stage_supported = false;
-    if (stage.empty()) {
-        LogWarn << __FUNCTION__ << "cannot resolve tile map without a concrete stage";
-        return false;
-    }
-    if (!BattleHelper::set_stage_name(stage) || !calc_tiles_info(stage)) {
-        LogWarn << __FUNCTION__ << "unsupported battle assist stage" << stage;
-        return false;
-    }
-    m_stage_supported = true;
-    return true;
 }
 
 bool asst::BattleAssistTaskPlugin::verify(AsstMsg msg, const json::value& details) const
@@ -58,9 +45,6 @@ bool asst::BattleAssistTaskPlugin::_run()
     BattleHelper::clear();
     m_last_auto_skill_use.clear();
     m_in_speedup = false;
-    if (!m_stage_name.empty()) {
-        m_stage_supported = calc_tiles_info(m_stage_name);
-    }
 
     auto image = ctrler()->get_image();
     if (!check_in_battle(image, false)) {
@@ -88,7 +72,7 @@ bool asst::BattleAssistTaskPlugin::_run()
             break;
         }
 
-        if (m_auto_use_skills && m_stage_supported && clock::now() - last_skill_scan >= skill_scan_interval) {
+        if (m_auto_use_skills && clock::now() - last_skill_scan >= skill_scan_interval) {
             use_all_ready_skills_on_battlefield(image);
             last_skill_scan = clock::now();
         }
@@ -100,38 +84,61 @@ bool asst::BattleAssistTaskPlugin::_run()
 
 bool asst::BattleAssistTaskPlugin::use_all_ready_skills_on_battlefield(const cv::Mat& image)
 {
-    std::vector<Point> ready_locations;
-    ready_locations.reserve(m_normal_tile_info.size());
+    BattlefieldDetector detector(image);
+    detector.set_object_of_interest({ .operators = true });
+    auto detector_result = detector.analyze();
+    if (!detector_result || detector_result->operators.empty()) {
+        return false;
+    }
 
-    const Rect image_rect { 0, 0, image.cols, image.rows };
-    for (const auto& [location, tile] : m_normal_tile_info) {
-        if (!image_rect.include(tile.pos)) {
-            continue;
-        }
+    struct ReadyOperator
+    {
+        Point click_point;
+        Point classifier_base;
+    };
+    std::vector<ReadyOperator> ready_operators;
+    ready_operators.reserve(detector_result->operators.size());
 
-        BattlefieldClassifier classifier(image);
-        classifier.set_object_of_interest({ .skill_ready = true });
-        classifier.set_base_point(tile.pos);
-        if (auto result = classifier.analyze(); result && result->skill_ready.ready) {
-            ready_locations.emplace_back(location);
+    for (const auto& oper : detector_result->operators) {
+        const Point click_point {
+            oper.rect.x + oper.rect.width / 2,
+            oper.rect.y + oper.rect.height / 2,
+        };
+        const std::array<double, 3> base_ratios { 0.75, 1.0, 1.15 };
+        for (double ratio : base_ratios) {
+            const Point classifier_base {
+                oper.rect.x + oper.rect.width / 2,
+                oper.rect.y + static_cast<int>(oper.rect.height * ratio),
+            };
+            BattlefieldClassifier classifier(image);
+            classifier.set_object_of_interest({ .skill_ready = true });
+            classifier.set_base_point(classifier_base);
+            auto result = classifier.analyze();
+            if (result && result->skill_ready.ready) {
+                ready_operators.emplace_back(ReadyOperator { click_point, classifier_base });
+                break;
+            }
         }
     }
 
     bool used = false;
     const auto now = std::chrono::steady_clock::now();
     constexpr auto same_tile_cooldown = std::chrono::seconds(5);
-    for (const Point& location : ready_locations) {
+    for (const auto& [click_point, classifier_base] : ready_operators) {
         if (need_exit()) {
             break;
         }
-        if (auto iter = m_last_auto_skill_use.find(location);
+        if (auto iter = m_last_auto_skill_use.find(click_point);
             iter != m_last_auto_skill_use.cend() && now - iter->second < same_tile_cooldown) {
             continue;
         }
-        if (use_skill(location, 0)) {
+
+        const int pre_delay = Task.get("BattleUseOper")->pre_delay;
+        if (ctrler()->click(click_point) && sleep(pre_delay)
+            && ProcessTask(this_task(), { "BattleUseSkillJustClick" }).run()) {
             used = true;
-            m_last_auto_skill_use[location] = now;
-            LogInfo << __FUNCTION__ << "used ready skill at" << location;
+            m_last_auto_skill_use[click_point] = now;
+            LogInfo << __FUNCTION__ << "used ready skill at" << click_point << "classifier base" << classifier_base;
         }
     }
     return used;

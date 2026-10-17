@@ -2844,6 +2844,8 @@ MAA를 독립된 새 폴더에 압축 해제하거나, MAA에 속하지 않는 D
     <system:String x:Key="WeComBotScheduleRemove">이 시간 삭제</system:String>
     <system:String x:Key="WeComBotEditAccount">일일 작업 설정 편집</system:String>
     <system:String x:Key="WeComBotDailyConfig">일일 클리어</system:String>
+    <system:String x:Key="WeComBotEnableBattleAssist">전투 보조 사용</system:String>
+    <system:String x:Key="WeComBotEnableBattleAssistTip">사용하면 이 계정 설정의 모든 이성 작전에 아래 전투 보조 옵션이 적용됩니다. 스테이지를 지정할 필요가 없습니다.</system:String>
     <system:String x:Key="WeComBotAccountEditorTip">이 옵션들은 이 계정에 연결된 프로필에 저장되며 저장 즉시 적용됩니다. 나머지 세부 항목은 MAA 작업 설정이나 채팅에서 변경할 수 있습니다.</system:String>
     <system:String x:Key="WeComBotUseMedicine">이성 회복제 사용</system:String>
     <system:String x:Key="WeComBotMedicineCount">개수</system:String>
