@@ -17,6 +17,8 @@
 6. 使用 .NET 10 重新构建 `src/MaaWpfGui/MaaWpfGui.csproj`。
 7. 构建成功后普通推送 `origin/feat/wecom-bot-settings`。
 
+版本号只使用正式 `v*` 标签，例如 `v6.20.0-beta.1`。内部 `alpha/...` 标签不会写入 `InformationalVersion`，避免启动阶段因为 HTTP `User-Agent` 含额外斜杠而闪退。
+
 如果官方改动与企微代码发生冲突，更新器会取消本次合并并保持原版本。解决冲突后可以再次运行。
 
 ## 官方内核更新

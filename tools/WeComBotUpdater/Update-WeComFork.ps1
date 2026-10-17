@@ -201,6 +201,19 @@ function Resolve-DotNet {
     throw "找不到 .NET 10 SDK。请设置环境变量 MAA_BOT_DOTNET 指向 dotnet.exe，或安装 .NET 10 SDK。"
 }
 
+function Get-SafeInformationalVersion {
+    param([string]$Value)
+
+    if (-not $Value) {
+        return ""
+    }
+    $LastPart = ($Value.Trim() -split "/")[-1]
+    if ($LastPart -match "^v?[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$") {
+        return $LastPart
+    }
+    return ""
+}
+
 function Get-RepoMaaProcesses {
     $DebugDir = Join-Path $RepoRoot "build\bin\Debug"
     return @(
@@ -442,9 +455,20 @@ try {
 
     if (-not $NoBuild) {
         $DotNet = Resolve-DotNet
-        $VersionTag = (& git -c "safe.directory=$RepoRoot" describe --tags --abbrev=0 $UpstreamRef 2>$null)
+        $VersionResult = Invoke-GitCapture -Arguments @(
+            "describe",
+            "--tags",
+            "--abbrev=0",
+            "--match",
+            "v*",
+            $UpstreamRef
+        )
+        $VersionTag = ""
+        if ($VersionResult.ExitCode -eq 0) {
+            $VersionTag = Get-SafeInformationalVersion (($VersionResult.Output -join "").Trim())
+        }
         if (-not $VersionTag -and $OfficialRelease) {
-            $VersionTag = $OfficialRelease.Tag
+            $VersionTag = Get-SafeInformationalVersion $OfficialRelease.Tag
         }
         $BuildArgs = @(
             "build",
