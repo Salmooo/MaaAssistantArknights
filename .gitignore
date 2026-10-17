@@ -3,6 +3,10 @@
 
 # Compiled Object files
 build
+
+# Personal MAA WeCom fork updater
+.updater-backups/
+.updater-cache/
 build-*
 *.slo
 *.lo
